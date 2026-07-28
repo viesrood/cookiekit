@@ -1,0 +1,326 @@
+/**
+ * CookieKit default theme.
+ *
+ * Restyle per site by overriding the custom properties, e.g.:
+ *
+ *   .ck-root {
+ *       --ck-bg: #1a1a2e;
+ *       --ck-text: #fff;
+ *       --ck-accent: #e94560;
+ *       --ck-font: 'Inter', sans-serif;
+ *   }
+ *
+ * Or skip this stylesheet entirely with
+ * `craft.cookiekit.render({ registerAssets: false })` and bring your own.
+ */
+
+.ck-root {
+    --ck-bg: #ffffff;
+    --ck-text: #1f2937;
+    --ck-muted: #6b7280;
+    --ck-border: #e5e7eb;
+    --ck-accent: #2563eb;
+    --ck-accent-text: #ffffff;
+    --ck-radius: 12px;
+    --ck-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+    --ck-font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --ck-z: 99999;
+    --ck-max-width: 560px;
+    --ck-overlay: rgba(0, 0, 0, 0.4);
+
+    font-family: var(--ck-font);
+    color: var(--ck-text);
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.ck-root[hidden],
+.ck-root [hidden] {
+    display: none !important;
+}
+
+/* Set on <html> while a blocking dialog is open. Both elements are needed:
+   body overflow only reaches the viewport while the root element's overflow is
+   visible, so on a site with `html { overflow-x: hidden }` locking the body
+   alone does nothing. A template that brings its own styles has to carry this
+   rule itself, see examples/templates/panel.twig. */
+html.ck-scroll-lock,
+html.ck-scroll-lock body {
+    overflow: hidden;
+}
+
+/* ---------------------------------------------------------- banner */
+
+.ck-banner {
+    position: fixed;
+    z-index: var(--ck-z);
+    inset-inline: 16px;
+    bottom: 16px;
+    margin-inline: auto;
+    max-width: var(--ck-max-width);
+    background: var(--ck-bg);
+    border: 1px solid var(--ck-border);
+    border-radius: var(--ck-radius);
+    box-shadow: var(--ck-shadow);
+    padding: 20px;
+}
+
+.ck-banner__title {
+    margin: 0 0 8px;
+    font-size: 17px;
+    font-weight: 600;
+}
+
+.ck-banner__text {
+    margin: 0 0 16px;
+    color: var(--ck-muted);
+}
+
+.ck-banner__text a {
+    color: var(--ck-accent);
+    text-decoration: underline;
+}
+
+.ck-banner__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.ck-banner__actions .ck-btn {
+    flex: 1 1 140px;
+}
+
+.ck-gpc {
+    margin: 0 0 16px;
+    padding: 10px 12px;
+    border-inline-start: 3px solid var(--ck-accent);
+    background: color-mix(in srgb, var(--ck-accent) 8%, var(--ck-bg));
+    color: var(--ck-text);
+    font-size: 14px;
+}
+
+/* ----------------------------------------------------------- panel */
+
+.ck-panel {
+    position: fixed;
+    z-index: var(--ck-z);
+    inset: 0;
+    background: var(--ck-overlay);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.ck-panel__dialog {
+    background: var(--ck-bg);
+    border-radius: var(--ck-radius);
+    box-shadow: var(--ck-shadow);
+    max-width: var(--ck-max-width);
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 24px;
+}
+
+.ck-panel__title {
+    margin: 0 0 8px;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.ck-panel__intro {
+    margin: 0 0 16px;
+    color: var(--ck-muted);
+}
+
+.ck-section {
+    border-top: 1px solid var(--ck-border);
+    padding: 12px 0;
+}
+
+.ck-section__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.ck-section__name {
+    font-weight: 600;
+}
+
+.ck-section__description {
+    margin: 4px 0 0;
+    color: var(--ck-muted);
+    font-size: 14px;
+}
+
+.ck-section__count {
+    background: none;
+    border: none;
+    padding: 0;
+    margin-top: 6px;
+    color: var(--ck-accent);
+    font-size: 13px;
+    cursor: pointer;
+    text-decoration: underline;
+    font-family: inherit;
+}
+
+/* ---------------------------------------------------------- switch */
+
+.ck-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.ck-switch input {
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    position: absolute;
+    inset: 0;
+    cursor: pointer;
+}
+
+.ck-switch__track {
+    position: absolute;
+    inset: 0;
+    background: var(--ck-border);
+    border-radius: 999px;
+    transition: background 0.15s ease;
+    pointer-events: none;
+}
+
+.ck-switch__track::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    background: var(--ck-bg);
+    border-radius: 50%;
+    transition: transform 0.15s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.ck-switch input:checked + .ck-switch__track {
+    background: var(--ck-accent);
+}
+
+.ck-switch input:checked + .ck-switch__track::after {
+    transform: translateX(20px);
+}
+
+.ck-switch input:disabled + .ck-switch__track {
+    opacity: 0.6;
+}
+
+.ck-switch input:focus-visible + .ck-switch__track {
+    outline: 2px solid var(--ck-accent);
+    outline-offset: 2px;
+}
+
+/* ---------------------------------------------------- cookie table */
+
+.ck-table {
+    display: block;
+    overflow-x: auto;
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 8px;
+}
+
+.ck-table th,
+.ck-table td {
+    text-align: left;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--ck-border);
+    vertical-align: top;
+}
+
+.ck-table th {
+    color: var(--ck-muted);
+    font-weight: 600;
+}
+
+/* --------------------------------------------------------- buttons */
+
+.ck-btn {
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: calc(var(--ck-radius) / 2);
+    padding: 10px 16px;
+    cursor: pointer;
+    border: 1px solid var(--ck-border);
+    background: var(--ck-bg);
+    color: var(--ck-text);
+    transition: filter 0.15s ease;
+}
+
+.ck-btn:hover {
+    filter: brightness(0.95);
+}
+
+.ck-btn--primary {
+    background: var(--ck-accent);
+    border-color: var(--ck-accent);
+    color: var(--ck-accent-text);
+}
+
+.ck-btn:focus-visible {
+    outline: 2px solid var(--ck-accent);
+    outline-offset: 2px;
+}
+
+.ck-panel__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+/* ----------------------------------------------------- placeholder */
+
+.ck-placeholder {
+    background: var(--ck-bg);
+    border: 1px dashed var(--ck-border);
+    border-radius: var(--ck-radius);
+    padding: 32px 20px;
+    text-align: center;
+    color: var(--ck-muted);
+    font-family: var(--ck-font);
+}
+
+.ck-placeholder p {
+    margin: 0 0 12px;
+}
+
+/* ------------------------------------------------------ responsive */
+
+@media (max-width: 480px) {
+    .ck-banner__actions .ck-btn,
+    .ck-panel__actions .ck-btn {
+        flex: 1 1 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ck-root *,
+    .ck-root *::before,
+    .ck-root *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+    }
+}

@@ -1,0 +1,110 @@
+{% extends '_layouts/cp' %}
+{% import 'cookiekit/cp/_categoryLabels' as categoryLabels %}
+
+{% set title = 'Consent log'|t('cookiekit') %}
+{% set selectedSubnavItem = 'consents' %}
+
+{% block actionButton %}
+    {% if currentUser.can('cookiekit:exportData') %}
+        <a class="btn" href="{{ actionUrl('cookiekit/export/consents') }}">{{ 'Export CSV'|t('cookiekit') }}</a>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    {% if not settings.logConsents %}
+        <div class="warning-alert warning">
+            <p>{{ 'Consent logging is currently disabled in the settings. New choices are not being recorded.'|t('cookiekit') }}</p>
+        </div>
+    {% endif %}
+
+    <p class="light">
+        {{ 'Append-only consent events (accountability, art. 7 GDPR). No IP address and no user agent are stored, but the consent id links the events of one visitor, so treat this as personal data. Entries are pruned automatically after {months} months.'|t('cookiekit', { months: settings.logRetentionMonths }) }}
+    </p>
+
+    <form method="get" class="flex" style="gap:10px;align-items:flex-end;margin:18px 0">
+        <div>
+            <label for="ck-site">{{ 'Site'|t('cookiekit') }}</label>
+            <select id="ck-site" name="siteId">
+                <option value="">{{ 'All sites'|t('cookiekit') }}</option>
+                {% for site in sites %}
+                    <option value="{{ site.id }}" {{ filters.siteId == site.id ? 'selected' }}>{{ site.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div><label for="ck-from">{{ 'From'|t('cookiekit') }}</label><input id="ck-from" type="date" name="from" value="{{ filters.from }}"></div>
+        <div><label for="ck-to">{{ 'To'|t('cookiekit') }}</label><input id="ck-to" type="date" name="to" value="{{ filters.to }}"></div>
+        <button class="btn" type="submit">{{ 'Filter'|t('cookiekit') }}</button>
+    </form>
+
+    <h2>{{ 'Totals'|t('cookiekit') }}</h2>
+    <table class="data">
+        <thead>
+            <tr>
+                <th>{{ 'Receipts'|t('cookiekit') }}</th>
+                {% for category in categories %}
+                    <th>{{ categoryLabels.of(category) }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>{{ total }}</strong></td>
+                {% for category in categories %}
+                    <td>{{ categoryCounts[category] ?? 0 }}</td>
+                {% endfor %}
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>{{ 'Most recent'|t('cookiekit') }}</h2>
+    {% if consents|length %}
+        <table class="data fullwidth">
+            <thead>
+                <tr>
+                    <th>{{ 'Date'|t('cookiekit') }}</th>
+                    <th>{{ 'Consent ID'|t('cookiekit') }}</th>
+                    <th>{{ 'Revision'|t('cookiekit') }}</th>
+                    <th>{{ 'Categories'|t('cookiekit') }}</th>
+                    <th>{{ 'Action'|t('cookiekit') }}</th>
+                    <th>{{ 'GPC'|t('cookiekit') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for consent in consents %}
+                    <tr>
+                        <td>{{ consent.dateCreated|datetime('short') }}</td>
+                        <td><code>{{ consent.consentId }}</code></td>
+                        <td>{{ consent.revision }}</td>
+                        <td>{{ consent.categories }}</td>
+                        <td>{{ consent.action }}</td>
+                        <td>{{ consent.gpc ? (consent.gpcOverride ? 'override' : 'active') : '-' }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="zilch">
+            <p>{{ 'No consents logged yet.'|t('cookiekit') }}</p>
+        </div>
+    {% endif %}
+
+    {# Its own permission: reading the log and destroying it are not the same
+       right, and this deletes the evidence the log exists to provide. #}
+    {% if currentUser.can('cookiekit:purgeData') %}
+        <hr>
+        <h2>{{ 'Data cleanup'|t('cookiekit') }}</h2>
+        <form method="post">
+            {{ csrfInput() }}
+            {{ actionInput('cookiekit/data/purge') }}
+            {{ redirectInput('cookiekit/consents') }}
+            <label for="ck-purge-before">{{ 'Remove consent events and analytics from before this date'|t('cookiekit') }}</label>
+            <div class="flex" style="gap:10px;align-items:center;margin-top:6px">
+                <input id="ck-purge-before" type="date" name="before" required>
+                <button class="btn" type="submit"
+                        data-confirm="{{ 'This permanently removes the selected local audit and analytics data. Continue?'|t('cookiekit') }}">
+                    {{ 'Remove old data'|t('cookiekit') }}
+                </button>
+            </div>
+        </form>
+    {% endif %}
+{% endblock %}

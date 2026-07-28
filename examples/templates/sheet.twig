@@ -1,0 +1,91 @@
+{# CookieKit: bottom sheet, the way a phone app does it.
+
+   Slides up from the bottom edge with a rounded top, and turns into a card in
+   the bottom-right corner from sm up. No backdrop and no scroll lock, so it
+   stays on the friendly side of the spectrum.
+
+   Install:
+     cp -r vendor/viesrood/cookiekit/examples/templates templates/_cookiekit
+     {{ craft.cookiekit.render({ template: '_cookiekit/sheet', registerCss: false }) }}
+
+   The slide-up is CSS only. The script toggles the `hidden` property, and a
+   transition cannot animate out of display:none, so this animates on the inner
+   wrapper instead: the outer element flips instantly, the panel inside slides.
+   That also keeps the display-utility rule intact, see _cookiekit/panel. #}
+
+{% css %}
+    /* Runs once, when the wrapper is first painted. Nothing to reset later,
+       because the whole thing is removed from the layout on close. */
+    @keyframes ck-sheet-up {
+        from { transform: translateY(100%); }
+        to   { transform: translateY(0); }
+    }
+    [data-ck-sheet] { animation: ck-sheet-up .28s cubic-bezier(.32, .72, 0, 1) both; }
+
+    @media (prefers-reduced-motion: reduce) {
+        [data-ck-sheet] { animation: none; }
+    }
+
+    @media (min-width: 640px) {
+        @keyframes ck-sheet-up {
+            from { transform: translateY(1rem); opacity: 0; }
+            to   { transform: translateY(0); opacity: 1; }
+        }
+    }
+{% endcss %}
+
+<div data-cookiekit-root
+     data-cookiekit-config="{{ config }}"
+     data-ck-placeholder-text="{{ 'Accept cookies to view this embedded content.'|t('cookiekit') }}"
+     data-ck-placeholder-button="{{ 'Cookie settings'|t('cookiekit') }}"
+     hidden>
+
+    <div data-ck-banner
+         role="dialog"
+         aria-modal="false"
+         aria-labelledby="ck-sheet-title"
+         aria-describedby="ck-sheet-text"
+         class="fixed inset-x-0 bottom-0 z-[9999] sm:inset-x-auto sm:bottom-6 sm:right-6 sm:w-96"
+         hidden>
+        <div data-ck-sheet
+             class="rounded-t-2xl border border-b-0 border-gray-200 bg-white p-6 pb-8 shadow-2xl sm:rounded-2xl sm:border-b sm:pb-6">
+
+            {# The grab handle is decoration: this sheet is dismissed with the
+               buttons, not by dragging, so it must not suggest otherwise to a
+               screen reader. #}
+            <div aria-hidden="true" class="mx-auto mb-4 h-1 w-10 rounded-full bg-gray-300 sm:hidden"></div>
+
+            <h2 id="ck-sheet-title" class="m-0 text-base font-semibold text-gray-900">
+                {{ 'We use cookies'|t('cookiekit') }}
+            </h2>
+            <p id="ck-sheet-text" class="mt-2 text-sm leading-relaxed text-gray-600">
+                {{ 'We use cookies to make this website work, to analyze usage and, with your consent, for marketing purposes. You choose which categories you allow.'|t('cookiekit') }}
+                {% if settings.policyUrl %}
+                    <a href="{{ settings.policyUrl }}" class="font-medium text-gray-900 underline underline-offset-2">
+                        {{ 'Read our cookie policy'|t('cookiekit') }}
+                    </a>
+                {% endif %}
+            </p>
+            <p data-ck-gpc hidden class="mt-3 border-l-2 border-gray-900 pl-3 text-sm text-gray-700">
+                {{ 'Your browser is sending a Global Privacy Control signal. Marketing is therefore off unless you explicitly choose otherwise.'|t('cookiekit') }}
+            </p>
+
+            <div class="mt-5 flex flex-col gap-2">
+                <button type="button" data-ck-action="accept-all"
+                        class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2">
+                    {{ 'Accept all'|t('cookiekit') }}
+                </button>
+                <button type="button" data-ck-action="deny"
+                        class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2">
+                    {{ 'Deny'|t('cookiekit') }}
+                </button>
+                <button type="button" data-ck-action="customize"
+                        class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2">
+                    {{ 'Adjust preferences'|t('cookiekit') }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {% include '_cookiekit/panel' %}
+</div>

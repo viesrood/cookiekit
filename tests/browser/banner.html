@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>CookieKit browser contract</title>
+</head>
+<body>
+    <a href="#" id="settings-link" data-cookiekit-show>Cookie settings</a>
+
+    <div data-cookiekit-root
+         data-cookiekit-config="{&quot;revision&quot;:2,&quot;duration&quot;:180,&quot;categories&quot;:[&quot;necessary&quot;,&quot;preferences&quot;,&quot;statistics&quot;,&quot;marketing&quot;],&quot;logConsents&quot;:false,&quot;analytics&quot;:false,&quot;gcm&quot;:false,&quot;snapshotHash&quot;:&quot;test&quot;,&quot;locale&quot;:&quot;en&quot;,&quot;saveUrl&quot;:&quot;/save&quot;,&quot;trackUrl&quot;:&quot;/track&quot;,&quot;csrfUrl&quot;:&quot;/csrf&quot;}"
+         data-ck-placeholder-text="Consent required"
+         data-ck-placeholder-button="Settings"
+         hidden>
+        <div data-ck-banner role="dialog" aria-modal="false" hidden>
+            <p data-ck-gpc hidden>GPC is active</p>
+            <button type="button" data-ck-action="deny">Deny</button>
+            <button type="button" data-ck-action="customize">Customize</button>
+            <button type="button" data-ck-action="accept-all">Accept all</button>
+        </div>
+        <div data-ck-panel role="dialog" aria-modal="true" hidden>
+            <p data-ck-gpc hidden>GPC is active in preferences</p>
+            <label><input type="checkbox" data-ck-category="necessary" checked disabled>Necessary</label>
+            <label><input type="checkbox" data-ck-category="preferences">Preferences</label>
+            <label><input type="checkbox" data-ck-category="statistics">Statistics</label>
+            <label><input type="checkbox" data-ck-category="marketing">Marketing</label>
+            <button type="button" data-ck-action="deny">Deny</button>
+            <button type="button" data-ck-action="save">Save</button>
+            <button type="button" data-ck-action="accept-all" id="last-action">Accept all</button>
+        </div>
+    </div>
+
+    <script type="text/plain" data-cookiekit="marketing">
+        window.marketingLoaded = (window.marketingLoaded || 0) + 1;
+    </script>
+    <script src="/src/web/assets/banner/dist/cookiekit.js"></script>
+</body>
+</html>

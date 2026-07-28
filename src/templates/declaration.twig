@@ -1,0 +1,39 @@
+{# Cookie declaration for a privacy/cookie policy page.
+   Render with `{{ craft.cookiekit.declaration() }}`.
+   Override via `craft.cookiekit.declaration({ template: '_cookiekit/declaration' })`.
+
+   Available variables: settings, cookiesByCategory, categories,
+   categoryLabels, categoryDescriptions. #}
+
+<div class="ck-declaration">
+    {% for category in categories %}
+        {% set cookies = cookiesByCategory[category] ?? [] %}
+        {% if cookies|length %}
+            <h3>{{ categoryLabels[category] }}</h3>
+            <table class="ck-table">
+                <thead>
+                    <tr>
+                        <th>{{ 'Name'|t('cookiekit') }}</th>
+                        <th>{{ 'Provider'|t('cookiekit') }}</th>
+                        <th>{{ 'Purpose'|t('cookiekit') }}</th>
+                        <th>{{ 'Expiry'|t('cookiekit') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cookie in cookies %}
+                        <tr>
+                            <td>{{ cookie.name }}</td>
+                            <td>{{ cookie.provider }}</td>
+                            <td>{{ cookie.purpose }}</td>
+                            <td>{{ cookie.duration }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    {% endfor %}
+
+    <p>
+        <a href="#" data-cookiekit-show>{{ 'Change your cookie preferences'|t('cookiekit') }}</a>
+    </p>
+</div>

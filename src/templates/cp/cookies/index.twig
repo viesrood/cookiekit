@@ -1,0 +1,73 @@
+{% extends '_layouts/cp' %}
+{% import 'cookiekit/cp/_categoryLabels' as categoryLabels %}
+
+{% set title = 'Cookies'|t('cookiekit') %}
+{% set selectedSubnavItem = 'cookies' %}
+
+{% block actionButton %}
+    <a href="{{ url('cookiekit/cookies/new') }}" class="btn submit add icon">
+        {{ 'New cookie'|t('cookiekit') }}
+    </a>
+{% endblock %}
+
+{% block content %}
+    <p class="light">
+        {{ 'This declaration is shown to visitors in the consent banner and via craft.cookiekit.declaration(). Bump the revision in the settings after material changes, so visitors are asked for consent again.'|t('cookiekit') }}
+    </p>
+
+    {% set hasAny = false %}
+    {% for category in categories %}
+        {% set cookies = cookiesByCategory[category] ?? [] %}
+        {% if cookies|length %}
+            {% set hasAny = true %}
+            <h2>{{ categoryLabels.of(category) }}</h2>
+            <table class="data fullwidth">
+                <thead>
+                    <tr>
+                        <th>{{ 'Name'|t('cookiekit') }}</th>
+                        <th>{{ 'Provider'|t('cookiekit') }}</th>
+                        <th>{{ 'Purpose'|t('cookiekit') }}</th>
+                        <th>{{ 'Expiry'|t('cookiekit') }}</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cookie in cookies %}
+                        <tr>
+                            <td><a href="{{ url('cookiekit/cookies/' ~ cookie.id) }}"><code>{{ cookie.name }}</code></a></td>
+                            <td>{{ cookie.provider }}</td>
+                            <td>{{ cookie.purpose }}</td>
+                            <td>{{ cookie.duration }}</td>
+                            <td class="thin">
+                                <form method="post" accept-charset="UTF-8">
+                                    {{ csrfInput() }}
+                                    {{ actionInput('cookiekit/cookies/delete') }}
+                                    {{ hiddenInput('cookieId', cookie.id) }}
+                                    <button type="submit" class="delete icon" title="{{ 'Delete'|t('app') }}"></button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    {% endfor %}
+
+    {% if not hasAny %}
+        <div class="zilch">
+            <p>{{ 'No cookies declared yet. Add every cookie your site sets, including the necessary ones.'|t('cookiekit') }}</p>
+        </div>
+    {% endif %}
+
+    {# Categories a visitor never sees, because nothing is declared under them.
+       Without this the banner quietly has fewer switches than the settings
+       screen suggests, and nothing explains why. #}
+    {% set hiddenCategories = categories|filter(category => category not in visibleCategories) %}
+    {% if hiddenCategories|length %}
+        <p class="light">
+            {{ 'Empty, so visitors are not offered it at all: {categories}. Declare a cookie there to bring the switch back, or turn off "Hide empty categories".'|t('cookiekit', {
+                categories: hiddenCategories|map(category => categoryLabels.of(category)|trim)|join(', '),
+            }) }}
+        </p>
+    {% endif %}
+{% endblock %}

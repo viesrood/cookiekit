@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="nl">
+<head>
+    <meta charset="utf-8">
+    <title>The banner must not report itself</title>
+</head>
+<body>
+<h1>Clean page</h1>
+
+<!-- CookieKit's own banner, as autoInject writes it into every page. The
+     declaration tables inside it name third parties, and the preview markup
+     looks exactly like a tracker. None of it is a finding. -->
+<div class="ck-root" data-cookiekit-root data-cookiekit-config="{}" hidden>
+    <div data-ck-panel>
+        <table class="ck-table">
+            <tr><td><code>_ga</code></td><td>Google Ireland Ltd.</td></tr>
+        </table>
+        <script type="text/plain"
+                data-cookiekit="statistics"
+                data-cookiekit-src="https://www.googletagmanager.com/gtag/js?id=G-EXAMPLE"></script>
+        <iframe data-cookiekit="marketing" data-cookiekit-src="https://www.youtube.com/embed/example"></iframe>
+    </div>
+</div>
+</body>
+</html>

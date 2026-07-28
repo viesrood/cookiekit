@@ -1,0 +1,141 @@
+{# CookieKit consent banner + preferences panel.
+
+   Override: copy this file into your site's templates folder and render it
+   with `craft.cookiekit.render({ template: '_cookiekit/banner' })`, or point
+   the "Banner template" setting at it so automatic injection uses it too.
+   Ready-made Tailwind variants live in the plugin's examples/templates folder.
+
+   Available variables: settings, config (a JSON string), cookiesByCategory,
+   categories, categoryLabels, categoryDescriptions. #}
+
+<div class="ck-root"
+     data-cookiekit-root
+     data-cookiekit-config="{{ config }}"
+     data-ck-placeholder-text="{{ 'Accept cookies to view this embedded content.'|t('cookiekit') }}"
+     data-ck-placeholder-button="{{ 'Cookie settings'|t('cookiekit') }}"
+     hidden>
+
+    {# ------------------------------------------------------ banner #}
+    <div class="ck-banner"
+         data-ck-banner
+         role="dialog"
+         aria-modal="false"
+         aria-labelledby="ck-banner-title"
+         aria-describedby="ck-banner-text"
+         hidden>
+        <h2 class="ck-banner__title" id="ck-banner-title">
+            {{ 'We use cookies'|t('cookiekit') }}
+        </h2>
+        <p class="ck-banner__text" id="ck-banner-text">
+            {{ 'We use cookies to make this website work, to analyze usage and, with your consent, for marketing purposes. You choose which categories you allow.'|t('cookiekit') }}
+            {% if settings.policyUrl %}
+                <a href="{{ settings.policyUrl }}">{{ 'Read our cookie policy'|t('cookiekit') }}</a>
+            {% endif %}
+        </p>
+        <p class="ck-gpc" data-ck-gpc hidden>
+            {{ 'Your browser is sending a Global Privacy Control signal. Marketing is therefore off unless you explicitly choose otherwise.'|t('cookiekit') }}
+        </p>
+        <div class="ck-banner__actions">
+            <button type="button" class="ck-btn" data-ck-action="deny">
+                {{ 'Deny'|t('cookiekit') }}
+            </button>
+            <button type="button" class="ck-btn" data-ck-action="customize">
+                {{ 'Adjust preferences'|t('cookiekit') }}
+            </button>
+            <button type="button" class="ck-btn" data-ck-action="accept-all">
+                {{ 'Accept all'|t('cookiekit') }}
+            </button>
+        </div>
+    </div>
+
+    {# ------------------------------------------------------- panel #}
+    <div class="ck-panel"
+         data-ck-panel
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="ck-panel-title"
+         aria-describedby="ck-panel-intro"
+         hidden>
+        <div class="ck-panel__dialog">
+            <h2 class="ck-panel__title" id="ck-panel-title">
+                {{ 'Cookie preferences'|t('cookiekit') }}
+            </h2>
+            <p class="ck-panel__intro" id="ck-panel-intro">
+                {{ 'Choose which cookie categories you allow. Your choice can be changed at any time via the cookie settings link.'|t('cookiekit') }}
+                {% if settings.policyUrl %}
+                    <a href="{{ settings.policyUrl }}">{{ 'Read our cookie policy'|t('cookiekit') }}</a>
+                {% endif %}
+            </p>
+            <p class="ck-gpc" data-ck-gpc hidden>
+                {{ 'Global Privacy Control is active. Marketing stays off by default; turning it on here records your explicit choice.'|t('cookiekit') }}
+            </p>
+
+            {% for category in categories %}
+                {% set cookies = cookiesByCategory[category] ?? [] %}
+                <div class="ck-section" data-ck-section>
+                    <div class="ck-section__header">
+                        <div>
+                            <span class="ck-section__name" id="ck-cat-{{ category }}">
+                                {{ categoryLabels[category] }}
+                            </span>
+                            <p class="ck-section__description">
+                                {{ categoryDescriptions[category] }}
+                            </p>
+                            {% if cookies|length %}
+                                <button type="button"
+                                        class="ck-section__count"
+                                        data-ck-toggle-details
+                                        aria-expanded="false">
+                                    {{ '{count, plural, =1{1 cookie} other{# cookies}}'|t('cookiekit', { count: cookies|length }) }}
+                                </button>
+                            {% endif %}
+                        </div>
+                        <label class="ck-switch">
+                            <input type="checkbox"
+                                   data-ck-category="{{ category }}"
+                                   aria-labelledby="ck-cat-{{ category }}"
+                                   {% if category == 'necessary' %}checked disabled{% endif %}>
+                            <span class="ck-switch__track"></span>
+                        </label>
+                    </div>
+                    {% if cookies|length %}
+                        <div data-ck-details hidden>
+                            <table class="ck-table">
+                                <thead>
+                                    <tr>
+                                        <th>{{ 'Name'|t('cookiekit') }}</th>
+                                        <th>{{ 'Provider'|t('cookiekit') }}</th>
+                                        <th>{{ 'Purpose'|t('cookiekit') }}</th>
+                                        <th>{{ 'Expiry'|t('cookiekit') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for cookie in cookies %}
+                                        <tr>
+                                            <td>{{ cookie.name }}</td>
+                                            <td>{{ cookie.provider }}</td>
+                                            <td>{{ cookie.purpose }}</td>
+                                            <td>{{ cookie.duration }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <div class="ck-panel__actions">
+                <button type="button" class="ck-btn" data-ck-action="deny">
+                    {{ 'Deny'|t('cookiekit') }}
+                </button>
+                <button type="button" class="ck-btn" data-ck-action="save">
+                    {{ 'Save preferences'|t('cookiekit') }}
+                </button>
+                <button type="button" class="ck-btn ck-btn--primary" data-ck-action="accept-all">
+                    {{ 'Accept all'|t('cookiekit') }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

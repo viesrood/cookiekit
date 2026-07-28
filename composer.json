@@ -1,0 +1,70 @@
+{
+    "name": "viesrood/cookiekit",
+    "description": "GDPR/AVG cookie consent banner for Craft CMS 5: category-based consent, script blocking, cookie declaration, consent logging without network or device data, and Google Consent Mode v2.",
+    "type": "craft-plugin",
+    "license": "MIT",
+    "keywords": [
+        "craft",
+        "craftcms",
+        "craft-plugin",
+        "cookies",
+        "cookie-consent",
+        "gdpr",
+        "avg",
+        "privacy",
+        "consent"
+    ],
+    "support": {
+        "docs": "https://github.com/viesrood/cookiekit/blob/main/README.md",
+        "issues": "https://github.com/viesrood/cookiekit/issues",
+        "source": "https://github.com/viesrood/cookiekit"
+    },
+    "require": {
+        "craftcms/cms": "^5.0.0",
+        "php": ">=8.2",
+        "symfony/css-selector": "^6.0|^7.0",
+        "symfony/dom-crawler": "^6.0|^7.0"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^2.0",
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "viesrood\\cookiekit\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "viesrood\\cookiekit\\tests\\": "tests/"
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "platform": {
+            "php": "8.2.0"
+        },
+        "allow-plugins": {
+            "yiisoft/yii2-composer": true,
+            "craftcms/plugin-installer": true
+        }
+    },
+    "scripts": {
+        "check": [
+            "@test",
+            "@analyse"
+        ],
+        "test": "phpunit",
+        "test:browser": "node tests/browser/banner.test.mjs",
+        "analyse": "phpstan analyse --no-progress --memory-limit=512M"
+    },
+    "extra": {
+        "handle": "cookiekit",
+        "name": "CookieKit",
+        "class": "viesrood\\cookiekit\\Plugin",
+        "developer": "Viesrood",
+        "developerUrl": "https://viesrood.nl",
+        "documentationUrl": "https://github.com/viesrood/cookiekit",
+        "changelogUrl": "https://raw.githubusercontent.com/viesrood/cookiekit/main/CHANGELOG.md"
+    }
+}

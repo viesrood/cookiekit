@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="nl">
+<head>
+    <meta charset="utf-8">
+    <title>Privé, café en €5</title>
+
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","name":"Café Zwölf","description":"Privé feest — vanaf €5"}
+    </script>
+
+    <script>
+        window.MESSAGES = {
+            greeting: "Goedemiddag, privé bezoeker",
+            price: "vanaf €5 — inclusief btw",
+            quote: 'Hij zei: "dat is prima"'
+        };
+    </script>
+
+    <style>
+        .arrow::after { content: "→"; }
+        .euro::before { content: "€"; }
+    </style>
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-3Y7GKHRGGR"></script>
+
+    <script type="module">
+        import { boot } from '/js/app.js';
+        boot();
+    </script>
+</head>
+<body>
+<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+    <linearGradient id="logoGradient" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#f00"/>
+    </linearGradient>
+    <clipPath id="logoClip"><rect width="24" height="24"/></clipPath>
+    <text textLength="20" lengthAdjust="spacingAndGlyphs">Zw&ouml;lf</text>
+</svg>
+
+<p>Een prijs van &euro;5, een caf&eacute; en een em-streepje &mdash; allemaal als entity.</p>
+
+<img src="https://www.facebook.com/tr?id=123456&amp;ev=PageView"
+     srcset="https://www.facebook.com/tr?id=123456&amp;ev=PageView 1x"
+     width="1" height="1" alt="">
+
+<iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"
+        width="560" height="315" title="Video met een &quot;titel&quot;" allowfullscreen></iframe>
+
+<template id="deferred">
+    <script src="https://www.googletagmanager.com/gtag/js?id=G-INSIDE-TEMPLATE"></script>
+</template>
+
+<div data-cookiekit-ignore>
+    <script src="https://static.hotjar.com/c/hotjar-999.js"></script>
+</div>
+
+<img src="/images/local.png" alt="Eerste partij, moet met rust gelaten worden">
+</body>
+</html>

@@ -1,0 +1,284 @@
+{% extends '_layouts/cp' %}
+{% import '_includes/forms' as forms %}
+{% import 'cookiekit/cp/_categoryLabels' as categoryLabels %}
+
+{% set title = 'Detection'|t('cookiekit') %}
+{% set selectedSubnavItem = 'scan' %}
+
+{% set declarable = open|filter(f => f.isDeclarable) %}
+{% set unblocked = open|filter(f => f.type == 'unblocked') %}
+{% set miscategorised = open|filter(f => f.type == 'miscategorised') %}
+
+{% block actionButton %}
+    <form method="post" accept-charset="UTF-8" class="inline-block">
+        {{ csrfInput() }}
+        {{ actionInput('cookiekit/scan/run') }}
+        {{ redirectInput('cookiekit/scan') }}
+        <button type="submit" class="btn submit">{{ 'Scan now'|t('cookiekit') }}</button>
+    </form>
+{% endblock %}
+
+{% block content %}
+
+    {# ------------------------------------------------------------- header #}
+
+    <p class="light">
+        {% if lastScan %}
+            {{ 'Last scan: {date}, {pages} page(s), {new} new finding(s).'|t('cookiekit', {
+                date: lastScan.dateCreated ? lastScan.dateCreated|datetime('short') : '?',
+                pages: lastScan.urlsScanned,
+                new: lastScan.findingsNew,
+            }) }}
+        {% else %}
+            {{ 'No scan has run yet.'|t('cookiekit') }}
+        {% endif %}
+    </p>
+
+    {# --------------------------------------------------------- alerts #}
+
+    {% if report.preConsent|length %}
+        <div class="error-notice" style="border-left:3px solid #cf1124;padding:10px 14px;margin-bottom:14px;background:rgba(207,17,36,.06)">
+            <strong>{{ '{count} cookie(s) were set before consent was given.'|t('cookiekit', { count: report.preConsent|length }) }}</strong>
+            <p class="light" style="margin:4px 0 0">
+                {{ 'This is the finding that matters most: tracking happened while the visitor had agreed to nothing. Block the scripts responsible, then scan again.'|t('cookiekit') }}
+            </p>
+        </div>
+    {% endif %}
+
+    {% if unblocked|length %}
+        <div style="border-left:3px solid #cf1124;padding:10px 14px;margin-bottom:14px;background:rgba(207,17,36,.06)">
+            <strong>{{ '{count} third-party resource(s) load without any data-cookiekit markup.'|t('cookiekit', { count: unblocked|length }) }}</strong>
+        </div>
+    {% endif %}
+
+    {% if declarable|length %}
+        <div style="border-left:3px solid #d9822b;padding:10px 14px;margin-bottom:14px;background:rgba(217,130,43,.06)">
+            <strong>{{ '{count} cookie(s) were detected that are not in your declaration.'|t('cookiekit', { count: declarable|length }) }}</strong>
+        </div>
+    {% endif %}
+
+    {% if miscategorised|length %}
+        <div style="border-left:3px solid #d9822b;padding:10px 14px;margin-bottom:14px;background:rgba(217,130,43,.06)">
+            <strong>{{ '{count} resource(s) are blocked under the wrong category.'|t('cookiekit', { count: miscategorised|length }) }}</strong>
+        </div>
+    {% endif %}
+
+    {% if report.containers|length %}
+        <div style="border-left:3px solid #0d78f2;padding:10px 14px;margin-bottom:14px;background:rgba(13,120,242,.06)">
+            <strong>{{ 'A tag container was found.'|t('cookiekit') }}</strong>
+            <p class="light" style="margin:4px 0 0">
+                {{ 'CookieKit can see that it is there, but not which tags are configured inside it. That lives in the tag manager, not in your site.'|t('cookiekit') }}
+            </p>
+        </div>
+    {% endif %}
+
+    {% if report.stale|length %}
+        <div style="border-left:3px solid #0d78f2;padding:10px 14px;margin-bottom:14px;background:rgba(13,120,242,.06)">
+            <strong>{{ '{count} declared cookie(s) have never been detected.'|t('cookiekit', { count: report.stale|length }) }}</strong>
+            <p class="light" style="margin:4px 0 0">
+                {{ 'Either they are gone, or they only appear on a page the scan did not reach. Worth a look, never an automatic deletion.'|t('cookiekit') }}
+                <a href="{{ url('cookiekit') }}">{{ 'Open the declaration'|t('cookiekit') }}</a>
+            </p>
+        </div>
+    {% endif %}
+
+    {# --------------------------------------------------- detected cookies #}
+
+    <h2>{{ 'Detected cookies'|t('cookiekit') }}</h2>
+
+    {% if declarable|length %}
+        <form method="post" accept-charset="UTF-8" id="ck-findings">
+            {{ csrfInput() }}
+            {{ redirectInput('cookiekit/scan') }}
+
+            <table class="data fullwidth">
+                <thead>
+                    <tr>
+                        <th class="thin"><input type="checkbox" data-ck-toggle-all title="{{ 'Select all'|t('cookiekit') }}"></th>
+                        <th>{{ 'Name'|t('cookiekit') }}</th>
+                        <th>{{ 'Provider'|t('cookiekit') }}</th>
+                        <th>{{ 'Category'|t('cookiekit') }}</th>
+                        <th>{{ 'Expiry'|t('cookiekit') }}</th>
+                        <th>{{ 'Evidence'|t('cookiekit') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for finding in declarable %}
+                        <tr>
+                            <td class="thin">
+                                <input type="checkbox" name="findingIds[]" value="{{ finding.id }}">
+                            </td>
+                            <td>
+                                <code>{{ finding.declarationName }}</code>
+                                {% if finding.declarationName != finding.name %}
+                                    <span class="light">({{ 'seen as'|t('cookiekit') }} <code>{{ finding.name }}</code>)</span>
+                                {% endif %}
+                                {% if finding.type == 'storage' %}
+                                    <span class="light">{{ finding.evidenceDetail }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ finding.provider ?: 'Unknown'|t('cookiekit') }}</td>
+                            <td>
+                                {{ forms.select({
+                                    name: 'categories[' ~ finding.id ~ ']',
+                                    value: finding.category,
+                                    options: [{ label: 'Choose…'|t('cookiekit'), value: '' }]|merge(
+                                        categories|map(c => { label: categoryLabels.of(c)|trim, value: c })
+                                    ),
+                                }) }}
+                            </td>
+                            <td>{{ finding.duration ?: '?' }}</td>
+                            <td>
+                                {% if finding.isObserved %}
+                                    <span class="status green"></span>{{ 'measured'|t('cookiekit') }}
+                                {% else %}
+                                    <span class="status orange"></span>{{ 'inferred'|t('cookiekit') }}
+                                {% endif %}
+                                <span class="light">{{ finding.sourceList|join(', ') }}</span>
+                                <br>
+                                <a class="light" href="{{ finding.evidenceUrl }}" rel="noreferrer">{{ finding.evidenceUrl|length > 60 ? finding.evidenceUrl|slice(0, 60) ~ '…' : finding.evidenceUrl }}</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            {# Each button posts to its own action URL, so the form does the
+               right thing with JavaScript switched off too. #}
+            <div class="buttons">
+                <button type="submit" class="btn submit"
+                        formaction="{{ actionUrl('cookiekit/scan/add-to-declaration') }}">
+                    {{ 'Add to declaration'|t('cookiekit') }}
+                </button>
+                <button type="submit" class="btn"
+                        formaction="{{ actionUrl('cookiekit/scan/ignore') }}">
+                    {{ 'Ignore'|t('cookiekit') }}
+                </button>
+            </div>
+        </form>
+
+        <p class="light">
+            {{ 'Anything marked "measured" was actually seen in a header or a real browser. "Inferred" means a script known to set it is loaded, which is an educated guess, not a measurement.'|t('cookiekit') }}
+        </p>
+    {% else %}
+        <div class="zilch">
+            <p>{{ 'Nothing waiting. Every detected cookie is either declared or ignored.'|t('cookiekit') }}</p>
+        </div>
+    {% endif %}
+
+    {# ------------------------------------------------- unblocked trackers #}
+
+    {% if unblocked|length or miscategorised|length %}
+        <h2>{{ 'Trackers that are not blocked'|t('cookiekit') }}</h2>
+
+        <p class="light">
+            {{ 'Copy the snippet over the tag in your template. Once a rescan no longer finds it, this row disappears by itself.'|t('cookiekit') }}
+        </p>
+
+        <table class="data fullwidth">
+            <thead>
+                <tr>
+                    <th>{{ 'Resource'|t('cookiekit') }}</th>
+                    <th>{{ 'Problem'|t('cookiekit') }}</th>
+                    <th>{{ 'Replace with'|t('cookiekit') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for finding in unblocked|merge(miscategorised) %}
+                    <tr>
+                        <td>
+                            <code>{{ finding.name }}</code>
+                            <br>
+                            <a class="light" href="{{ finding.evidenceUrl }}" rel="noreferrer">{{ finding.evidenceUrl }}</a>
+                        </td>
+                        <td>{{ finding.evidenceDetail }}</td>
+                        <td>
+                            {% if finding.snippet %}
+                                <code class="ck-snippet" style="display:block;white-space:pre-wrap;word-break:break-all;max-width:520px">{{ finding.snippet }}</code>
+                                <button type="button" class="btn small" data-ck-copy>{{ 'Copy'|t('cookiekit') }}</button>
+                            {% else %}
+                                <span class="light">{{ 'No automatic fix: this cannot be blocked by the banner.'|t('cookiekit') }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {# ---------------------------------------------------- browser scanner #}
+
+    <h2>{{ 'Measure it in a real browser'|t('cookiekit') }}</h2>
+
+    <p class="light">
+        {{ 'The scan above reads your HTML and your response headers, but never runs JavaScript, so cookies that scripts set are inferred rather than seen. Run the browser scanner to measure them for real, and to find out whether anything is set before consent.'|t('cookiekit') }}
+    </p>
+
+    <code style="display:block;padding:10px;white-space:pre-wrap">node scanner/scan.js {{ siteUrl }} --out scan.json
+php craft cookiekit/scan/import scan.json</code>
+
+    {# --------------------------------------------------- imported/ignored #}
+
+    {% if lastScan and lastScan.importBatch %}
+        <h2>{{ 'Last automatic import'|t('cookiekit') }}</h2>
+        <form method="post" accept-charset="UTF-8">
+            {{ csrfInput() }}
+            {{ actionInput('cookiekit/scan/revert') }}
+            {{ redirectInput('cookiekit/scan') }}
+            {{ hiddenInput('batch', lastScan.importBatch) }}
+            <p class="light">
+                {{ 'The last scan added cookies to the declaration on its own. Rows you have edited since are left alone.'|t('cookiekit') }}
+            </p>
+            <button type="submit" class="btn">{{ 'Undo that import'|t('cookiekit') }}</button>
+        </form>
+    {% endif %}
+
+    {% if ignored|length %}
+        <h2>{{ 'Ignored'|t('cookiekit') }} ({{ ignored|length }})</h2>
+        <form method="post" accept-charset="UTF-8">
+            {{ csrfInput() }}
+            {{ actionInput('cookiekit/scan/reset') }}
+            {{ redirectInput('cookiekit/scan') }}
+            <table class="data fullwidth">
+                <tbody>
+                    {% for finding in ignored %}
+                        <tr>
+                            <td class="thin"><input type="checkbox" name="findingIds[]" value="{{ finding.id }}"></td>
+                            <td><code>{{ finding.name }}</code></td>
+                            <td class="light">{{ finding.type }}</td>
+                            <td class="light">{{ finding.evidenceUrl }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class="buttons">
+                <button type="submit" class="btn">{{ 'Reopen'|t('cookiekit') }}</button>
+            </div>
+        </form>
+    {% endif %}
+
+{% endblock %}
+
+{% js %}
+    var toggleAll = document.querySelector('[data-ck-toggle-all]');
+    if (toggleAll) {
+        toggleAll.addEventListener('change', function () {
+            document.querySelectorAll('#ck-findings input[name="findingIds[]"]').forEach(function (box) {
+                box.checked = toggleAll.checked;
+            });
+        });
+    }
+
+    document.querySelectorAll('[data-ck-copy]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            var snippet = button.parentNode.querySelector('.ck-snippet');
+            if (!snippet) {
+                return;
+            }
+
+            navigator.clipboard.writeText(snippet.textContent).then(function () {
+                Craft.cp.displayNotice(Craft.t('cookiekit', 'Snippet copied.'));
+            });
+        });
+    });
+{% endjs %}

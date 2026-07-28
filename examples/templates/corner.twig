@@ -1,0 +1,61 @@
+{# CookieKit: card in the corner.
+
+   More visible than the bar and with room for a real sentence, still without
+   covering the page. Full width on a phone, a card bottom-left from sm up.
+
+   Install:
+     cp -r vendor/viesrood/cookiekit/examples/templates templates/_cookiekit
+     {{ craft.cookiekit.render({ template: '_cookiekit/corner', registerCss: false }) }}
+
+   For a bottom-right card, swap `left-4 right-4 sm:right-auto` on the banner
+   for `left-4 right-4 sm:left-auto`.
+
+   See _cookiekit/panel for the two rules that keep a custom template working. #}
+
+<div data-cookiekit-root
+     data-cookiekit-config="{{ config }}"
+     data-ck-placeholder-text="{{ 'Accept cookies to view this embedded content.'|t('cookiekit') }}"
+     data-ck-placeholder-button="{{ 'Cookie settings'|t('cookiekit') }}"
+     hidden>
+
+    {# aria-modal="false" on purpose: the page behind stays usable and focus is
+       never trapped, so claiming otherwise would mislead assistive software. #}
+    <div data-ck-banner
+         role="dialog"
+         aria-modal="false"
+         aria-labelledby="ck-corner-title"
+         aria-describedby="ck-corner-text"
+         class="fixed bottom-4 left-4 right-4 z-[9999] rounded-xl border border-gray-200 bg-white p-5 text-sm shadow-xl sm:right-auto sm:w-80"
+         hidden>
+        <h2 id="ck-corner-title" class="m-0 text-base font-semibold text-gray-900">
+            {{ 'We use cookies'|t('cookiekit') }}
+        </h2>
+        <p id="ck-corner-text" class="mt-2 text-gray-600">
+            {{ 'We use cookies to make this website work, to analyze usage and, with your consent, for marketing purposes. You choose which categories you allow.'|t('cookiekit') }}
+            {% if settings.policyUrl %}
+                <a href="{{ settings.policyUrl }}" class="font-medium text-gray-900 underline underline-offset-2">
+                    {{ 'Read our cookie policy'|t('cookiekit') }}
+                </a>
+            {% endif %}
+        </p>
+        <p data-ck-gpc hidden class="mt-3 border-l-2 border-gray-900 pl-3 text-gray-700">
+            {{ 'Your browser is sending a Global Privacy Control signal. Marketing is therefore off unless you explicitly choose otherwise.'|t('cookiekit') }}
+        </p>
+        <div class="mt-4 flex flex-col gap-2">
+            <button type="button" data-ck-action="accept-all"
+                    class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2">
+                {{ 'Accept all'|t('cookiekit') }}
+            </button>
+            <button type="button" data-ck-action="deny"
+                    class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2">
+                {{ 'Deny'|t('cookiekit') }}
+            </button>
+            <button type="button" data-ck-action="customize"
+                    class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2">
+                {{ 'Adjust preferences'|t('cookiekit') }}
+            </button>
+        </div>
+    </div>
+
+    {% include '_cookiekit/panel' %}
+</div>

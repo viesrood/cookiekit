@@ -1,0 +1,63 @@
+{# CookieKit: subtle bar along the bottom.
+
+   The least intrusive of the four. It does not cover anything, does not block
+   scrolling, and leaves the page readable while the visitor decides.
+
+   Install:
+     cp -r vendor/viesrood/cookiekit/examples/templates templates/_cookiekit
+     {{ craft.cookiekit.render({ template: '_cookiekit/bar', registerCss: false }) }}
+
+   Or set "Banner template" to _cookiekit/bar and "Load the bundled stylesheet"
+   to off, and automatic injection picks it up too.
+
+   Variables: settings, config (a JSON string), cookiesByCategory, categories,
+   categoryLabels, categoryDescriptions.
+
+   Print config as {{ config }} and never with |raw. Twig's escaping round-trips
+   correctly through the attribute; |raw produces markup the script cannot parse,
+   and it bails out silently when that happens. #}
+
+<div data-cookiekit-root
+     data-cookiekit-config="{{ config }}"
+     data-ck-placeholder-text="{{ 'Accept cookies to view this embedded content.'|t('cookiekit') }}"
+     data-ck-placeholder-button="{{ 'Cookie settings'|t('cookiekit') }}"
+     hidden>
+
+    {# A region, not a dialog: this takes no focus and blocks nothing, so
+       announcing it as a dialog would be a lie to a screen reader. #}
+    <div data-ck-banner
+         role="region"
+         aria-label="{{ 'Cookie notice'|t('cookiekit') }}"
+         class="fixed inset-x-0 bottom-0 z-[9999] border-t border-gray-200 bg-white/95 px-4 py-3 text-sm text-gray-700 shadow-[0_-2px_12px_rgba(0,0,0,0.06)] backdrop-blur"
+         hidden>
+        <div class="mx-auto flex max-w-5xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p class="m-0">
+                {{ 'We use cookies to make this website work and, with your consent, to measure and improve it.'|t('cookiekit') }}
+                {% if settings.policyUrl %}
+                    <a href="{{ settings.policyUrl }}" class="font-medium text-gray-900 underline underline-offset-2">
+                        {{ 'Read our cookie policy'|t('cookiekit') }}
+                    </a>
+                {% endif %}
+            </p>
+            <p data-ck-gpc hidden class="m-0 border-l-2 border-gray-900 pl-3 text-gray-700">
+                {{ 'Your browser is sending a Global Privacy Control signal. Marketing is therefore off unless you explicitly choose otherwise.'|t('cookiekit') }}
+            </p>
+            <div class="flex flex-wrap gap-2 sm:shrink-0">
+                <button type="button" data-ck-action="deny"
+                        class="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2">
+                    {{ 'Deny'|t('cookiekit') }}
+                </button>
+                <button type="button" data-ck-action="customize"
+                        class="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2">
+                    {{ 'Adjust preferences'|t('cookiekit') }}
+                </button>
+                <button type="button" data-ck-action="accept-all"
+                        class="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2">
+                    {{ 'Accept all'|t('cookiekit') }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {% include '_cookiekit/panel' %}
+</div>

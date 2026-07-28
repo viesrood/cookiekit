@@ -1,0 +1,113 @@
+{% extends '_layouts/cp' %}
+
+{% set title = 'Dashboard'|t('cookiekit') %}
+{% set selectedSubnavItem = 'dashboard' %}
+
+{% block actionButton %}
+    {% if currentUser.can('cookiekit:exportData') %}
+        <a class="btn" href="{{ actionUrl('cookiekit/export/analytics') }}">{{ 'Export analytics CSV'|t('cookiekit') }}</a>
+    {% endif %}
+{% endblock %}
+
+{% css %}
+    .ck-dashboard-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+    .ck-dashboard-card{padding:18px;border:1px solid var(--hairline-color);border-radius:8px;background:var(--white)}
+    .ck-dashboard-card h2{margin:0 0 5px}.ck-dashboard-number{font-size:30px;font-weight:700;line-height:1.1}
+    .ck-checks{margin-top:20px}.ck-check{display:grid;grid-template-columns:18px 180px 1fr auto;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--hairline-color)}
+    .ck-check__mark{font-size:16px}.ck-check__mark.ok{color:var(--green)}.ck-check__mark.todo{color:var(--orange)}
+    .ck-bars{display:flex;align-items:flex-end;gap:5px;height:120px;margin-top:14px}
+    .ck-day{display:flex;align-items:flex-end;gap:1px;flex:1;height:100%}
+    .ck-bar{flex:1;min-width:2px;border-radius:3px 3px 0 0;opacity:.8}.ck-bar--views{background:var(--blue)}.ck-bar--choices{background:var(--green)}
+    .ck-legend{display:flex;gap:18px;margin-top:8px}.ck-legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
+    @media(max-width:700px){.ck-check{grid-template-columns:18px 1fr}.ck-check .light,.ck-check a{grid-column:2}}
+{% endcss %}
+
+{% block content %}
+    <p class="light">
+        {{ 'A practical health check for consent, blocking and proof. It is not a legal certification.'|t('cookiekit') }}
+    </p>
+
+    {% if sites|length > 1 %}
+        <form method="get" class="flex" style="gap:10px;align-items:center">
+            <label for="ck-dashboard-site">{{ 'Site'|t('cookiekit') }}</label>
+            <select id="ck-dashboard-site" name="siteId">
+                {% for site in sites %}
+                    <option value="{{ site.id }}" {{ selectedSiteId == site.id ? 'selected' }}>{{ site.name }}</option>
+                {% endfor %}
+            </select>
+            <button class="btn" type="submit">{{ 'Filter'|t('cookiekit') }}</button>
+        </form>
+    {% endif %}
+
+    <div class="ck-dashboard-grid">
+        <div class="ck-dashboard-card">
+            <h2>{{ 'Consent events'|t('cookiekit') }}</h2>
+            <div class="ck-dashboard-number">{{ consentTotal }}</div>
+            <a href="{{ url('cookiekit/consents') }}">{{ 'Open audit trail'|t('cookiekit') }}</a>
+        </div>
+        <div class="ck-dashboard-card">
+            <h2>{{ 'Open findings'|t('cookiekit') }}</h2>
+            <div class="ck-dashboard-number">{{ openFindings }}</div>
+            <a href="{{ url('cookiekit/scan') }}">{{ 'Review detection'|t('cookiekit') }}</a>
+        </div>
+        <div class="ck-dashboard-card">
+            <h2>{{ 'Choices (30 days)'|t('cookiekit') }}</h2>
+            <div class="ck-dashboard-number">
+                {{ analyticsTotals.acceptAll + analyticsTotals.denyAll + analyticsTotals.custom + analyticsTotals.changed + analyticsTotals.withdrawn }}
+            </div>
+            <span class="light">{{ analyticsTotals.bannerViews }} {{ 'banner views'|t('cookiekit') }}</span>
+        </div>
+        <div class="ck-dashboard-card">
+            <h2>{{ 'Last scan'|t('cookiekit') }}</h2>
+            <div class="ck-dashboard-number">{{ lastScan ? lastScan.urlsScanned : '-' }}</div>
+            <span class="light">{{ lastScan and lastScan.dateCreated ? lastScan.dateCreated|datetime('short') : 'No scan yet'|t('cookiekit') }}</span>
+        </div>
+    </div>
+
+    {% if settings.analyticsEnabled %}
+        <div class="ck-dashboard-grid">
+            <div class="ck-dashboard-card"><h2>{{ 'Accepted all'|t('cookiekit') }}</h2><div class="ck-dashboard-number">{{ analyticsTotals.acceptAll }}</div></div>
+            <div class="ck-dashboard-card"><h2>{{ 'Rejected all'|t('cookiekit') }}</h2><div class="ck-dashboard-number">{{ analyticsTotals.denyAll }}</div></div>
+            <div class="ck-dashboard-card"><h2>{{ 'Custom or changed'|t('cookiekit') }}</h2><div class="ck-dashboard-number">{{ analyticsTotals.custom + analyticsTotals.changed }}</div></div>
+            <div class="ck-dashboard-card"><h2>{{ 'Withdrawn'|t('cookiekit') }}</h2><div class="ck-dashboard-number">{{ analyticsTotals.withdrawn }}</div></div>
+            <div class="ck-dashboard-card"><h2>{{ 'Statistics granted'|t('cookiekit') }}</h2><div class="ck-dashboard-number">{{ analyticsTotals.grantStatistics }}</div></div>
+            <div class="ck-dashboard-card"><h2>{{ 'Marketing granted'|t('cookiekit') }}</h2><div class="ck-dashboard-number">{{ analyticsTotals.grantMarketing }}</div></div>
+        </div>
+    {% endif %}
+
+    {% if settings.analyticsEnabled and analyticsSeries|length %}
+        {% set maxActivity = max(analyticsSeries|map(row => row.bannerViews + row.acceptAll + row.denyAll + row.custom + row.changed + row.withdrawn)) %}
+        <div class="ck-dashboard-card">
+            <h2>{{ 'Banner activity'|t('cookiekit') }}</h2>
+            <div class="ck-bars" aria-label="{{ 'Banner views and choices per day'|t('cookiekit') }}">
+                {% for row in analyticsSeries %}
+                    {% set choices = row.acceptAll + row.denyAll + row.custom + row.changed + row.withdrawn %}
+                    <span class="ck-day" title="{{ row.day }}: {{ row.bannerViews }} {{ 'views'|t('cookiekit') }}, {{ choices }} {{ 'choices'|t('cookiekit') }}">
+                        <i class="ck-bar ck-bar--views" style="height:{{ maxActivity ? max(3, (row.bannerViews / maxActivity * 100)|round) : 3 }}%"></i>
+                        <i class="ck-bar ck-bar--choices" style="height:{{ maxActivity ? max(3, (choices / maxActivity * 100)|round) : 3 }}%"></i>
+                    </span>
+                {% endfor %}
+            </div>
+            <div class="ck-legend light">
+                <span><i style="background:var(--blue)"></i>{{ 'Views'|t('cookiekit') }}</span>
+                <span><i style="background:var(--green)"></i>{{ 'Choices'|t('cookiekit') }}</span>
+            </div>
+        </div>
+    {% elseif not settings.analyticsEnabled %}
+        <div class="notice">
+            <p>{{ 'Anonymous aggregate analytics are disabled. Enable them in Settings to see local trends.'|t('cookiekit') }}</p>
+        </div>
+    {% endif %}
+
+    <div class="ck-checks">
+        <h2>{{ 'Setup and health'|t('cookiekit') }}</h2>
+        {% for check in checks %}
+            <div class="ck-check">
+                <span class="ck-check__mark {{ check.ok ? 'ok' : 'todo' }}" aria-hidden="true">{{ check.ok ? '●' : '○' }}</span>
+                <strong>{{ check.label }}</strong>
+                <span class="light">{{ check.detail }}</span>
+                <a href="{{ url(check.url) }}">{{ check.ok ? 'Review'|t('cookiekit') : 'Fix this'|t('cookiekit') }}</a>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

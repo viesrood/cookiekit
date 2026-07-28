@@ -1,0 +1,95 @@
+{# CookieKit: the declaration table for a cookie policy page.
+
+   The one example that is not a banner. It renders the same data as the
+   bundled declaration, but with Tailwind classes and with the category
+   descriptions actually used, which the bundled one leaves on the table.
+
+   Install:
+     cp -r vendor/viesrood/cookiekit/examples/templates templates/_cookiekit
+     {{ craft.cookiekit.declaration({ template: '_cookiekit/declaration' }) }}
+
+   Variables: settings, cookiesByCategory, categories, categoryLabels,
+   categoryDescriptions. There is no config here: the declaration carries no
+   state of its own.
+
+   The link with data-cookiekit-show is wired up by the banner script, which
+   render() already put on the page. If this page has no banner, the link does
+   nothing, so keep automatic injection on or call render() in your layout.
+
+   Write the introduction on the page itself rather than here. A visitor needs
+   to know what cookies are and that they can change their mind; this template
+   only answers "which ones, and for how long". #}
+
+{# `necessary` stays in `categories` even with nothing declared under it,
+   because Deny and Save grant it either way. That is right for the banner
+   and wrong here, where it would print a heading above an empty table. #}
+{% set filled = categories|filter(c => (cookiesByCategory[c] ?? [])|length > 0) %}
+
+<div class="space-y-12">
+    {% for category in filled %}
+        {% set cookies = cookiesByCategory[category] %}
+
+        <section aria-labelledby="cookies-{{ category }}">
+            <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <h2 id="cookies-{{ category }}" class="text-2xl font-semibold text-slate-900">
+                    {{ categoryLabels[category] }}
+                </h2>
+                <span class="text-sm text-slate-500">
+                    {{ '{count, plural, =1{1 cookie} other{# cookies}}'|t('cookiekit', { count: cookies|length }) }}
+                </span>
+            </div>
+
+            <p class="mt-2 max-w-3xl text-slate-600">
+                {{ categoryDescriptions[category] }}
+            </p>
+
+            {# Four columns do not fit on a phone. It stays a real table and is
+               allowed to scroll sideways; role and tabindex are what let a
+               keyboard user reach that scroll area at all. #}
+            <div class="mt-4 overflow-x-auto rounded-lg border border-slate-200"
+                 role="region"
+                 tabindex="0"
+                 aria-labelledby="cookies-{{ category }}">
+                <table class="w-full min-w-[40rem] border-collapse text-left text-sm">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th scope="col" class="px-4 py-3 font-medium text-slate-500">{{ 'Name'|t('cookiekit') }}</th>
+                            <th scope="col" class="px-4 py-3 font-medium text-slate-500">{{ 'Provider'|t('cookiekit') }}</th>
+                            <th scope="col" class="px-4 py-3 font-medium text-slate-500">{{ 'Purpose'|t('cookiekit') }}</th>
+                            <th scope="col" class="px-4 py-3 font-medium text-slate-500">{{ 'Expiry'|t('cookiekit') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for cookie in cookies %}
+                            <tr class="align-top">
+                                <th scope="row" class="px-4 py-3 font-mono text-xs font-normal text-slate-900">
+                                    {{ cookie.name }}
+                                </th>
+                                <td class="px-4 py-3 text-slate-700">{{ cookie.provider }}</td>
+                                <td class="px-4 py-3 text-slate-700">{{ cookie.purpose }}</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-slate-700">{{ cookie.duration }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    {% else %}
+        {# Reachable, and worth handling: an empty declaration means nobody has
+           filled one in yet, and a blank page reads as a broken one. #}
+        <p class="text-slate-600">
+            {{ 'No cookies have been declared for this site yet.'|t('cookiekit') }}
+        </p>
+    {% endfor %}
+
+    <div class="rounded-lg bg-slate-50 p-6">
+        <h2 class="text-xl font-semibold text-slate-900">
+            {{ 'Change your cookie preferences'|t('cookiekit') }}
+        </h2>
+        <a href="#"
+           data-cookiekit-show
+           class="mt-4 inline-flex items-center gap-2 rounded-md bg-slate-900 px-5 py-2.5 font-medium text-white transition hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2">
+            {{ 'Cookie settings'|t('cookiekit') }}
+        </a>
+    </div>
+</div>

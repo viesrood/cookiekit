@@ -1,0 +1,226 @@
+{% import '_includes/forms' as forms %}
+
+{{ forms.textField({
+    label: 'Consent revision'|t('cookiekit'),
+    instructions: 'Bump this number whenever the cookie declaration changes materially. Every visitor will then be asked for consent again.'|t('cookiekit'),
+    id: 'revision',
+    name: 'revision',
+    type: 'number',
+    size: 4,
+    value: settings.revision,
+    errors: settings.getErrors('revision'),
+}) }}
+
+{{ forms.textField({
+    label: 'Consent cookie duration (days)'|t('cookiekit'),
+    instructions: 'How long a consent choice stays valid. EU guidance suggests asking again at least every 12 months.'|t('cookiekit'),
+    id: 'cookieDuration',
+    name: 'cookieDuration',
+    type: 'number',
+    size: 4,
+    value: settings.cookieDuration,
+    errors: settings.getErrors('cookieDuration'),
+}) }}
+
+{{ forms.textField({
+    label: 'Cookie policy URL'|t('cookiekit'),
+    instructions: 'Linked from the banner. Tip: put craft.cookiekit.declaration() on that page.'|t('cookiekit'),
+    id: 'policyUrl',
+    name: 'policyUrl',
+    value: settings.policyUrl,
+    errors: settings.getErrors('policyUrl'),
+}) }}
+
+{{ forms.lightswitchField({
+    label: 'Inject banner automatically'|t('cookiekit'),
+    instructions: 'Adds the banner to every front-end page automatically. When disabled, add {{ craft.cookiekit.render() }} to your layout yourself (recommended, more control).'|t('cookiekit'),
+    id: 'autoInject',
+    name: 'autoInject',
+    on: settings.autoInject,
+    errors: settings.getErrors('autoInject'),
+}) }}
+
+{{ forms.autosuggestField({
+    label: 'Banner template'|t('cookiekit'),
+    instructions: 'A site template such as _cookiekit/banner, rendered instead of the bundled one. Automatic injection uses it too. Ready-made Tailwind variants ship in the plugin\'s examples folder.'|t('cookiekit'),
+    id: 'bannerTemplate',
+    name: 'bannerTemplate',
+    suggestEnvVars: true,
+    value: settings.bannerTemplate,
+    errors: settings.getErrors('bannerTemplate'),
+}) }}
+
+{{ forms.lightswitchField({
+    label: 'Load the bundled stylesheet'|t('cookiekit'),
+    instructions: 'Turn this off when your own template brings its own styles. The script is always loaded: without it the banner is markup that does nothing.'|t('cookiekit'),
+    id: 'registerBannerCss',
+    name: 'registerBannerCss',
+    on: settings.registerBannerCss,
+    errors: settings.getErrors('registerBannerCss'),
+}) }}
+
+{{ forms.lightswitchField({
+    label: 'Hide empty categories'|t('cookiekit'),
+    instructions: 'Leaves a category out of the banner when no cookies are declared for it. It is then not offered at all, so "Accept all" does not grant it either and scripts blocked under it stay blocked. Turn this off if you block scripts under a category whose cookies you have not declared yet.'|t('cookiekit'),
+    id: 'hideEmptyCategories',
+    name: 'hideEmptyCategories',
+    on: settings.hideEmptyCategories,
+    errors: settings.getErrors('hideEmptyCategories'),
+}) }}
+
+{{ forms.autosuggestField({
+    label: 'Banner language'|t('cookiekit'),
+    instructions: 'Leave empty to follow the site language, which is what you want in almost every case. Fill in a language tag such as nl or nl-NL when the site language cannot change but your visitors read something else. This translates the plugin\'s own texts only, never the cookie declaration itself.'|t('cookiekit'),
+    id: 'bannerLanguage',
+    name: 'bannerLanguage',
+    suggestEnvVars: true,
+    value: settings.bannerLanguage,
+    errors: settings.getErrors('bannerLanguage'),
+}) }}
+
+<hr>
+
+<h2>{{ 'Automatic blocking'|t('cookiekit') }}</h2>
+
+{{ forms.selectField({
+    label: 'Blocking mode'|t('cookiekit'),
+    instructions: 'Start with reporting, run Detection, and only enforce after reviewing the recognised resources. Unknown providers are never blocked on a guess. Reporting changes nothing on the page: it checks the pages visitors actually request, at most once per URL per hour, and lists what enforcing would act on under Detection.'|t('cookiekit'),
+    id: 'autoBlockMode',
+    name: 'autoBlockMode',
+    value: settings.autoBlockMode,
+    options: [
+        { label: 'Off'|t('cookiekit'), value: 'off' },
+        { label: 'Report only'|t('cookiekit'), value: 'report' },
+        { label: 'Enforce for recognised providers'|t('cookiekit'), value: 'enforce' },
+    ],
+    errors: settings.getErrors('autoBlockMode'),
+}) }}
+
+<p class="light">
+    {{ 'Add data-cookiekit-ignore to an element or ancestor when a recognised resource must never be rewritten.'|t('cookiekit') }}
+</p>
+
+<hr>
+
+{{ forms.lightswitchField({
+    label: 'Log consents'|t('cookiekit'),
+    instructions: 'Store append-only consent events and the exact declaration snapshot shown to the visitor (accountability, art. 7 GDPR). No IP address and no user agent are stored, but the consent id links the events of one visitor, so this table holds personal data.'|t('cookiekit'),
+    id: 'logConsents',
+    name: 'logConsents',
+    on: settings.logConsents,
+    errors: settings.getErrors('logConsents'),
+}) }}
+
+{{ forms.lightswitchField({
+    label: 'Anonymous aggregate analytics'|t('cookiekit'),
+    instructions: 'Count banner views and choices per day on this server. No visitor identifiers, page URLs, IP addresses or user agents are stored.'|t('cookiekit'),
+    id: 'analyticsEnabled',
+    name: 'analyticsEnabled',
+    on: settings.analyticsEnabled,
+    errors: settings.getErrors('analyticsEnabled'),
+}) }}
+
+{{ forms.textField({
+    label: 'Log retention (months)'|t('cookiekit'),
+    instructions: 'Consent receipts older than this are deleted during garbage collection.'|t('cookiekit'),
+    id: 'logRetentionMonths',
+    name: 'logRetentionMonths',
+    type: 'number',
+    size: 4,
+    value: settings.logRetentionMonths,
+    errors: settings.getErrors('logRetentionMonths'),
+}) }}
+
+<hr>
+
+{{ forms.lightswitchField({
+    label: 'Google Consent Mode v2'|t('cookiekit'),
+    instructions: 'Emit consent default/update signals for gtag.js and Google Tag Manager. Place your gtag snippet after {{ head() }} in your layout so the defaults load first.'|t('cookiekit'),
+    id: 'googleConsentMode',
+    name: 'googleConsentMode',
+    on: settings.googleConsentMode,
+    errors: settings.getErrors('googleConsentMode'),
+}) }}
+
+<hr>
+
+<h2>{{ 'Detection'|t('cookiekit') }}</h2>
+
+{{ forms.lightswitchField({
+    label: 'Enable detection'|t('cookiekit'),
+    instructions: 'Adds the Detection screen, where a scan tells you which cookies your site really sets and which trackers are not blocked.'|t('cookiekit'),
+    id: 'scanEnabled',
+    name: 'scanEnabled',
+    on: settings.scanEnabled,
+    errors: settings.getErrors('scanEnabled'),
+}) }}
+
+{{ forms.lightswitchField({
+    label: 'Add measured cookies automatically'|t('cookiekit'),
+    instructions: 'A cookie that was actually observed and is recognised goes straight into the declaration, and the whole import can be undone in one click. Anything unrecognised always waits for you instead of getting an invented description.'|t('cookiekit'),
+    id: 'autoImport',
+    name: 'autoImport',
+    on: settings.autoImport,
+    errors: settings.getErrors('autoImport'),
+}) }}
+
+{{ forms.textField({
+    label: 'Maximum pages per scan'|t('cookiekit'),
+    id: 'scanMaxUrls',
+    name: 'scanMaxUrls',
+    type: 'number',
+    size: 4,
+    value: settings.scanMaxUrls,
+    errors: settings.getErrors('scanMaxUrls'),
+}) }}
+
+{{ forms.textField({
+    label: 'Pages sampled per entry type'|t('cookiekit'),
+    instructions: 'Entry types are what differ in template, and the template decides which third parties a page loads.'|t('cookiekit'),
+    id: 'scanUrlsPerSection',
+    name: 'scanUrlsPerSection',
+    type: 'number',
+    size: 4,
+    value: settings.scanUrlsPerSection,
+    errors: settings.getErrors('scanUrlsPerSection'),
+}) }}
+
+{{ forms.textareaField({
+    label: 'Extra URLs'|t('cookiekit'),
+    instructions: 'One per line. Pages a crawl would never find on its own, such as a checkout or a landing page.'|t('cookiekit'),
+    id: 'scanExtraUrls',
+    name: 'scanExtraUrls',
+    rows: 3,
+    value: settings.scanExtraUrls,
+    errors: settings.getErrors('scanExtraUrls'),
+}) }}
+
+{{ forms.lightswitchField({
+    label: 'Bypass the page cache while scanning'|t('cookiekit'),
+    instructions: 'On, you get a freshly rendered page, but you are measuring a variant no visitor receives. Off, you measure the cached pre-consent variant, which is legally the interesting one. Both are defensible.'|t('cookiekit'),
+    id: 'scanCacheBust',
+    name: 'scanCacheBust',
+    on: settings.scanCacheBust,
+    errors: settings.getErrors('scanCacheBust'),
+}) }}
+
+{{ forms.autosuggestField({
+    label: 'Scan token'|t('cookiekit'),
+    instructions: 'Shared secret for the browser scanner when it talks to this site over the network. Leave empty and those endpoints stay closed.'|t('cookiekit'),
+    id: 'scanToken',
+    name: 'scanToken',
+    suggestEnvVars: true,
+    value: settings.scanToken,
+    errors: settings.getErrors('scanToken'),
+}) }}
+
+{{ forms.textField({
+    label: 'Keep findings for (days)'|t('cookiekit'),
+    instructions: 'Findings nobody acted on are cleaned up after this. Note that a cookie missing from a scan is not proof it is gone, so findings expire on age, never on absence.'|t('cookiekit'),
+    id: 'findingRetentionDays',
+    name: 'findingRetentionDays',
+    type: 'number',
+    size: 4,
+    value: settings.findingRetentionDays,
+    errors: settings.getErrors('findingRetentionDays'),
+}) }}

@@ -1,0 +1,17 @@
+{#
+    The consent category labels, defined once instead of copied into every
+    template that shows one.
+
+    {% import 'cookiekit/cp/_categoryLabels' as categoryLabels %}
+    {{ categoryLabels.of(cookie.category) }}
+#}
+
+{% macro of(category) -%}
+    {%- set map = {
+        necessary: 'Necessary'|t('cookiekit'),
+        preferences: 'Preferences'|t('cookiekit'),
+        statistics: 'Statistics'|t('cookiekit'),
+        marketing: 'Marketing'|t('cookiekit'),
+    } -%}
+    {{- map[category] ?? category -}}
+{%- endmacro %}

@@ -1,0 +1,75 @@
+{% extends '_layouts/cp' %}
+{% import '_includes/forms' as forms %}
+{% import 'cookiekit/cp/_categoryLabels' as categoryLabels %}
+
+{% set title = cookie.id ? 'Edit cookie'|t('cookiekit') : 'New cookie'|t('cookiekit') %}
+{% set selectedSubnavItem = 'cookies' %}
+{% set fullPageForm = true %}
+
+{% block content %}
+    {{ actionInput('cookiekit/cookies/save') }}
+    {{ redirectInput('cookiekit') }}
+    {% if cookie.id %}
+        {{ hiddenInput('cookieId', cookie.id) }}
+    {% endif %}
+
+    {{ forms.textField({
+        label: 'Name'|t('cookiekit'),
+        instructions: 'The cookie name as it appears in the browser, e.g. `_ga`.'|t('cookiekit'),
+        id: 'name',
+        name: 'name',
+        value: cookie.name,
+        required: true,
+        errors: cookie.getErrors('name'),
+    }) }}
+
+    {{ forms.selectField({
+        label: 'Category'|t('cookiekit'),
+        id: 'category',
+        name: 'category',
+        value: cookie.category,
+        options: categories|map(category => {
+            value: category,
+            label: categoryLabels.of(category)|trim,
+        }),
+        errors: cookie.getErrors('category'),
+    }) }}
+
+    {{ forms.textField({
+        label: 'Provider'|t('cookiekit'),
+        instructions: 'The party that sets the cookie, e.g. "Google Analytics".'|t('cookiekit'),
+        id: 'provider',
+        name: 'provider',
+        value: cookie.provider,
+        errors: cookie.getErrors('provider'),
+    }) }}
+
+    {{ forms.textareaField({
+        label: 'Purpose'|t('cookiekit'),
+        instructions: 'Shown to visitors in the banner and the declaration.'|t('cookiekit'),
+        id: 'purpose',
+        name: 'purpose',
+        value: cookie.purpose,
+        rows: 3,
+        errors: cookie.getErrors('purpose'),
+    }) }}
+
+    {{ forms.textField({
+        label: 'Expiry'|t('cookiekit'),
+        instructions: 'Human-readable lifetime, e.g. "2 years" or "Session".'|t('cookiekit'),
+        id: 'duration',
+        name: 'duration',
+        value: cookie.duration,
+        errors: cookie.getErrors('duration'),
+    }) }}
+
+    {{ forms.textField({
+        label: 'Sort order'|t('cookiekit'),
+        id: 'sortOrder',
+        name: 'sortOrder',
+        type: 'number',
+        size: 4,
+        value: cookie.sortOrder,
+        errors: cookie.getErrors('sortOrder'),
+    }) }}
+{% endblock %}

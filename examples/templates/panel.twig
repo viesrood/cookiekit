@@ -1,0 +1,202 @@
+{# CookieKit preferences panel, styled with Tailwind.
+
+   Shared by every banner variant in this folder. It also carries the small
+   bit of plain CSS that all of them need, so it belongs in the page exactly
+   once, which is what including it from a single banner template guarantees.
+
+   Two rules keep this working, and they apply to your own edits too:
+
+   1. Never put a display utility (flex, grid, block, inline-flex) on an
+      element carrying data-cookiekit-root, data-ck-banner, data-ck-panel or
+      data-ck-details. cookiekit.js opens and closes those with the `hidden`
+      property alone, and in Tailwind v3 a display utility beats preflight's
+      [hidden] rule, so the panel would never close again. Put the layout on
+      an inner wrapper instead. The guard below covers you either way.
+
+   2. The category checkbox is a real, enabled <input> hidden with sr-only.
+      sr-only clips it, it does not display:none it, so it keeps its tab stop.
+      The script focuses the first input or button in the panel when it opens,
+      and .focus() on a display:none element fails without a word. #}
+
+{% css %}
+    /* The placeholder shown in place of a blocked embed is built in
+       JavaScript, so these three class names exist only inside cookiekit.js.
+       Tailwind's scanner will never find them and @source cannot help, because
+       they are not utilities. Plain CSS on purpose. Delete this block if you
+       leave the bundled stylesheet switched on. */
+    .ck-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: .75rem;
+        border: 1px dashed #d1d5db;
+        border-radius: .75rem;
+        background: #f9fafb;
+        padding: 2rem 1.25rem;
+        text-align: center;
+        color: #4b5563;
+        font-size: .875rem;
+        line-height: 1.5;
+    }
+    .ck-placeholder p { margin: 0; }
+    .ck-btn {
+        border: 1px solid #d1d5db;
+        border-radius: .375rem;
+        background: #fff;
+        padding: .5rem .875rem;
+        font: inherit;
+        font-size: .875rem;
+        font-weight: 600;
+        color: #374151;
+        cursor: pointer;
+    }
+    .ck-btn:hover { background: #f3f4f6; }
+    .ck-btn--primary { background: #111827; border-color: #111827; color: #fff; }
+    .ck-btn--primary:hover { background: #374151; }
+
+    /* Belt and braces for rule 1 above. Tailwind v4 already marks its own
+       [hidden] rule important; v3 does not. This makes both behave the same,
+       so a stray display utility cannot leave the panel stuck open. */
+    [data-cookiekit-root][hidden],
+    [data-cookiekit-root] [hidden] { display: none !important; }
+
+    /* The script adds this to <html> while a blocking dialog is open. Both
+       elements are needed: body overflow only reaches the viewport while the
+       root element's overflow is visible, so on a site with
+       `html { overflow-x: hidden }` locking the body alone does nothing.
+       The bundled stylesheet carries the same rule; this is here because these
+       templates are meant to run with registerCss: false. */
+    html.ck-scroll-lock,
+    html.ck-scroll-lock body { overflow: hidden; }
+{% endcss %}
+
+{# Mandatory, even in a design that never opens it. showBanner(), showPanel()
+   and hideAll() all dereference this without a null check, and hideAll() runs
+   at page load for every returning visitor, so a missing panel throws before
+   the consented scripts are unblocked. That breaks only for people who already
+   said yes, which is the worst possible shape for a bug. #}
+<div data-ck-panel
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="ck-panel-title"
+     class="fixed inset-0 z-[10000] bg-gray-900/60 p-4"
+     hidden>
+    <div class="mx-auto flex h-full max-w-xl items-center">
+        <div class="max-h-full w-full overflow-y-auto rounded-xl bg-white p-6 shadow-2xl">
+
+            <div class="flex items-start justify-between gap-4">
+                <h2 id="ck-panel-title" class="m-0 text-lg font-semibold text-gray-900">
+                    {{ 'Cookie preferences'|t('cookiekit') }}
+                </h2>
+                {# Keep a real, enabled button first in the DOM: the script
+                   focuses the first input or button it finds here, and a
+                   disabled checkbox would silently swallow that focus. #}
+                {# The modal passes `back`, because closing outright would let
+                   someone step past a gate that is meant to block. The label
+                   follows, so what a screen reader announces stays true. #}
+                <button type="button"
+                        data-ck-action="{{ panelDismissAction ?? 'close' }}"
+                        {# "Back" whichever action is used. `close` only really
+                           closes for a visitor who already chose; before that
+                           it returns to the banner, so announcing "Close"
+                           would be telling a screen reader something that is
+                           about to turn out false. #}
+                        aria-label="{{ 'Back'|t('cookiekit') }}"
+                        class="-m-2 shrink-0 rounded-md p-2 text-gray-400 hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900">
+                    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5">
+                        <path d="M6.3 5A.9.9 0 105 6.3L8.7 10 5 13.7A.9.9 0 106.3 15L10 11.3l3.7 3.7a.9.9 0 101.3-1.3L11.3 10 15 6.3A.9.9 0 1013.7 5L10 8.7 6.3 5z"/>
+                    </svg>
+                </button>
+            </div>
+
+            <p class="mt-2 text-sm text-gray-600">
+                {{ 'Choose which cookie categories you allow. Your choice can be changed at any time via the cookie settings link.'|t('cookiekit') }}
+                {% if settings.policyUrl %}
+                    <a href="{{ settings.policyUrl }}" class="font-medium text-gray-900 underline underline-offset-2">
+                        {{ 'Read our cookie policy'|t('cookiekit') }}
+                    </a>
+                {% endif %}
+            </p>
+            <p data-ck-gpc hidden class="mt-3 border-l-2 border-gray-900 pl-3 text-sm text-gray-700">
+                {{ 'Global Privacy Control is active. Marketing stays off by default; turning it on here records your explicit choice.'|t('cookiekit') }}
+            </p>
+
+            <div class="mt-4">
+                {% for category in categories %}
+                    {% set cookies = cookiesByCategory[category] ?? [] %}
+                    <div data-ck-section class="border-t border-gray-200 py-4">
+                        <div class="flex items-start justify-between gap-4">
+                            <div class="min-w-0">
+                                <span id="ck-cat-{{ category }}" class="block font-semibold text-gray-900">
+                                    {{ categoryLabels[category] }}
+                                </span>
+                                <p class="mt-1 text-sm text-gray-600">
+                                    {{ categoryDescriptions[category] }}
+                                </p>
+                                {% if cookies|length %}
+                                    <button type="button" data-ck-toggle-details aria-expanded="false"
+                                            class="mt-2 text-sm font-medium text-gray-900 underline underline-offset-2 hover:no-underline focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900">
+                                        {{ '{count, plural, =1{1 cookie} other{# cookies}}'|t('cookiekit', { count: cookies|length }) }}
+                                    </button>
+                                {% endif %}
+                            </div>
+
+                            <label class="relative inline-flex shrink-0 cursor-pointer items-center">
+                                <input type="checkbox"
+                                       data-ck-category="{{ category }}"
+                                       aria-labelledby="ck-cat-{{ category }}"
+                                       {% if category == 'necessary' %}checked disabled{% endif %}
+                                       class="peer sr-only">
+                                <span aria-hidden="true"
+                                      class="relative block h-6 w-11 rounded-full bg-gray-300 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-transform after:content-[''] peer-checked:bg-gray-900 peer-checked:after:translate-x-5 peer-disabled:cursor-not-allowed peer-disabled:opacity-60 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-gray-900"></span>
+                            </label>
+                        </div>
+
+                        {% if cookies|length %}
+                            {# Must start hidden: aria-expanded on the toggle is
+                               the single source of truth and the handler flips
+                               this to match it. #}
+                            <div data-ck-details hidden class="mt-3 overflow-x-auto">
+                                <table class="w-full border-collapse text-left text-xs">
+                                    <thead>
+                                        <tr class="text-gray-500">
+                                            <th class="border-b border-gray-200 px-2 py-1.5 font-semibold">{{ 'Name'|t('cookiekit') }}</th>
+                                            <th class="border-b border-gray-200 px-2 py-1.5 font-semibold">{{ 'Provider'|t('cookiekit') }}</th>
+                                            <th class="border-b border-gray-200 px-2 py-1.5 font-semibold">{{ 'Purpose'|t('cookiekit') }}</th>
+                                            <th class="border-b border-gray-200 px-2 py-1.5 font-semibold">{{ 'Expiry'|t('cookiekit') }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="align-top text-gray-700">
+                                        {% for cookie in cookies %}
+                                            <tr>
+                                                <td class="border-b border-gray-100 px-2 py-1.5 font-mono">{{ cookie.name }}</td>
+                                                <td class="border-b border-gray-100 px-2 py-1.5">{{ cookie.provider }}</td>
+                                                <td class="border-b border-gray-100 px-2 py-1.5">{{ cookie.purpose }}</td>
+                                                <td class="border-b border-gray-100 px-2 py-1.5 whitespace-nowrap">{{ cookie.duration }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="mt-5 flex flex-wrap gap-2 border-t border-gray-200 pt-5">
+                <button type="button" data-ck-action="deny"
+                        class="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2">
+                    {{ 'Deny'|t('cookiekit') }}
+                </button>
+                <button type="button" data-ck-action="save"
+                        class="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2">
+                    {{ 'Save preferences'|t('cookiekit') }}
+                </button>
+                <button type="button" data-ck-action="accept-all"
+                        class="ml-auto rounded-md border border-gray-900 bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2">
+                    {{ 'Accept all'|t('cookiekit') }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,69 @@
+{# CookieKit: modal over the whole page.
+
+   The most insistent of the four. Backdrop, centred dialog, focus kept inside
+   it and the page behind locked from scrolling.
+
+   Install:
+     cp -r vendor/viesrood/cookiekit/examples/templates templates/_cookiekit
+     {{ craft.cookiekit.render({ template: '_cookiekit/modal', registerCss: false }) }}
+
+   Worth knowing before you choose this one: a consent dialog that covers the
+   page is legitimate, but only when refusing is exactly as easy as accepting.
+   "Deny" sits next to "Accept all" here for that reason. Do not remove it.
+
+   CookieKit 2 traps focus and locks page scrolling while the preferences
+   panel is open. The first-layer modal itself remains a deliberate choice in
+   this template. #}
+
+<div data-cookiekit-root
+     data-cookiekit-config="{{ config }}"
+     data-ck-placeholder-text="{{ 'Accept cookies to view this embedded content.'|t('cookiekit') }}"
+     data-ck-placeholder-button="{{ 'Cookie settings'|t('cookiekit') }}"
+     hidden>
+
+    <div data-ck-banner
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="ck-modal-title"
+         aria-describedby="ck-modal-text"
+         class="fixed inset-0 z-[9999] bg-slate-900/70 p-4 backdrop-blur-sm"
+         hidden>
+        <div class="flex min-h-full items-center justify-center">
+            <div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl sm:p-8">
+                <h2 id="ck-modal-title" class="m-0 text-xl font-semibold text-gray-900">
+                    {{ 'We use cookies'|t('cookiekit') }}
+                </h2>
+                <p id="ck-modal-text" class="mt-3 text-sm leading-relaxed text-gray-600">
+                    {{ 'We use cookies to make this website work, to analyze usage and, with your consent, for marketing purposes. You choose which categories you allow.'|t('cookiekit') }}
+                    {% if settings.policyUrl %}
+                        <a href="{{ settings.policyUrl }}" class="font-medium text-gray-900 underline underline-offset-2">
+                            {{ 'Read our cookie policy'|t('cookiekit') }}
+                        </a>
+                    {% endif %}
+                </p>
+                <p data-ck-gpc hidden class="mt-3 border-l-2 border-gray-900 pl-3 text-sm text-gray-700">
+                    {{ 'Your browser is sending a Global Privacy Control signal. Marketing is therefore off unless you explicitly choose otherwise.'|t('cookiekit') }}
+                </p>
+                <div class="mt-6 flex flex-col gap-2 sm:flex-row-reverse">
+                    <button type="button" data-ck-action="accept-all"
+                            class="rounded-md border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2 sm:flex-1">
+                        {{ 'Accept all'|t('cookiekit') }}
+                    </button>
+                    <button type="button" data-ck-action="deny"
+                            class="rounded-md border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2 sm:flex-1">
+                        {{ 'Deny'|t('cookiekit') }}
+                    </button>
+                    <button type="button" data-ck-action="customize"
+                            class="rounded-md border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2 sm:flex-1">
+                        {{ 'Adjust preferences'|t('cookiekit') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# `back` returns directly to the first-layer modal. CookieKit 2 also makes
+       `close` return there when no valid choice exists, but this label is more
+       honest about what the button does. #}
+    {% include '_cookiekit/panel' with { panelDismissAction: 'back' } %}
+</div>
